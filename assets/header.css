@@ -1,0 +1,8 @@
+/* always show up/down arrow on number input */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    opacity: 1;
+}
+input[type=number] {
+    max-width: 106px;
+}
