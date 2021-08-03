@@ -337,7 +337,10 @@ def insert_record_into_db(n_clicks, selected_stack, selected_competitive_mode, s
             return "Record inserted successfully!", dbc.Table.from_dataframe(df.head(8), striped=True, bordered=True, responsive = True)
 
         else:
-            return "Wrong auth token!", dash.no_update
+            df = pd.read_sql_table(table_name, url)
+            df.sort_values(by=["id"], ascending=False, inplace=True)
+            df["timestamp"] = df["timestamp"].dt.strftime("%a %d.%m.%Y %H:%M")
+            return "Wrong auth token!", dbc.Table.from_dataframe(df.head(8), striped=True, bordered=True, responsive = True)
 
     return dash.no_update, dash.no_update
 
