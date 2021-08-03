@@ -1,3 +1,5 @@
+import os
+
 import dash
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -9,7 +11,7 @@ from decouple import config
 
 # themes available at https://www.bootstrapcdn.com/bootswatch/
 BS = "https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/lux/bootstrap.min.css"
-app = dash.Dash(external_stylesheets=[BS])
+app = dash.Dash(__name__, external_stylesheets=[BS])
 app.title = "Overwatch Team Stats"
 
 url = config("URL")
