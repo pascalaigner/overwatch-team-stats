@@ -12,7 +12,6 @@ BS = "https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/lux/bootstrap.min.css"
 app = dash.Dash(external_stylesheets=[BS])
 app.title = "Overwatch Team Stats"
 
-auth_token = config("AUTH_TOKEN")
 url = config("URL")
 table_name = "overwatch_team_stats"
 
@@ -120,14 +119,26 @@ app.layout = dbc.Container(
                 dbc.Col(
                     [
                         html.H5("Score"),
-                        dbc.Input(id="score", type="number"),
+                        dbc.Input(
+                            id="score",
+                            type="number",
+                            min=0,
+                            max=10,
+                            value=0,
+                        ),
                     ],
                     width="auto",
                 ),
                 dbc.Col(
                     [
                         html.H5("Score enemy"),
-                        dbc.Input(id="score_enemy", type="number"),
+                        dbc.Input(
+                            id="score_enemy",
+                            type="number",
+                            min=0,
+                            max=10,
+                            value=0,
+                        ),
                     ],
                     width="auto",
                 ),
@@ -209,7 +220,13 @@ app.layout = dbc.Container(
                 dbc.Col(
                     [
                         html.H5("Season"),
-                        dbc.Input(id="season", type="number", value=29),
+                        dbc.Input(
+                            id="season",
+                            type="number",
+                            min=0,
+                            max=100,
+                            value=29,
+                        ),
                     ],
                     width="auto",
                 ),
@@ -220,7 +237,21 @@ app.layout = dbc.Container(
             [
                 dbc.Col(
                     [
-                        dbc.Button("Insert record", id="insert_record_button", color="primary", className="mr-1"),
+                        html.H5("Auth token"),
+                        dbc.Input(
+                            id="auth_token_input",
+                        ),
+                    ],
+                    width="auto",
+                ),
+                dbc.Col(
+                    [
+                        dbc.Button(
+                            "Insert record",
+                            id="insert_record_button",
+                            color="primary",
+                            className="mr-1"
+                        ),
                     ],
                     width="auto",
                 ),
@@ -242,7 +273,7 @@ app.layout = dbc.Container(
                     [
                         html.Div(
                             id="table",
-                            children=[dbc.Table.from_dataframe(df.head(5), striped=True, bordered=True, responsive = True)],
+                            children=[dbc.Table.from_dataframe(df.head(8), striped=True, bordered=True, responsive = True)],
                         ),
                     ],
                 ),
@@ -254,6 +285,7 @@ app.layout = dbc.Container(
 
 
 @app.callback(
+    Output(component_id="insert_record_feedback", component_property="children"),
     Output(component_id="table", component_property="children"),
     Input(component_id="insert_record_button", component_property="n_clicks"),
     State(component_id="stack", component_property="value"),
@@ -269,38 +301,44 @@ app.layout = dbc.Container(
     State(component_id="aegi97", component_property="value"),
     State(component_id="bside", component_property="value"),
     State(component_id="season", component_property="value"),
+    State(component_id="auth_token_input", component_property="value"),
 )
 def insert_record_into_db(n_clicks, selected_stack, selected_competitive_mode, selected_game_mode, selected_map,
                           selected_result, inputted_score, inputted_score_enemy, selected_first, selected_sargmonster,
-                          selected_sevicoder777, selected_aegi97, selected_bside, inputted_season):
+                          selected_sevicoder777, selected_aegi97, selected_bside, inputted_season, inputted_auth_token):
     
     if dash.callback_context.triggered[0]["prop_id"] == "insert_record_button.n_clicks":
+
+        if inputted_auth_token == config("AUTH_TOKEN"):
         
-        query = db.insert(data).values(
-            timestamp=datetime.now(),
-            stack=selected_stack,
-            competitive_mode=selected_competitive_mode,
-            game_mode=selected_game_mode,
-            map=selected_map,
-            result=selected_result,
-            score=inputted_score,
-            score_enemy=inputted_score_enemy,
-            first=selected_first,
-            sargmonster=selected_sargmonster,
-            sevicoder777=selected_sevicoder777,
-            aegi97=selected_aegi97,
-            bside=selected_bside,
-            season=inputted_season
-        )
-        ResultProxy = connection.execute(query)
+            query = db.insert(data).values(
+                timestamp=datetime.now(),
+                stack=selected_stack,
+                competitive_mode=selected_competitive_mode,
+                game_mode=selected_game_mode,
+                map=selected_map,
+                result=selected_result,
+                score=inputted_score,
+                score_enemy=inputted_score_enemy,
+                first=selected_first,
+                sargmonster=selected_sargmonster,
+                sevicoder777=selected_sevicoder777,
+                aegi97=selected_aegi97,
+                bside=selected_bside,
+                season=inputted_season
+            )
+            ResultProxy = connection.execute(query)
 
-        df = pd.read_sql_table(table_name, url)
-        df.sort_values(by=["id"], ascending=False, inplace=True)
-        df["timestamp"] = df["timestamp"].dt.strftime("%a %d.%m.%Y %H:%M")
+            df = pd.read_sql_table(table_name, url)
+            df.sort_values(by=["id"], ascending=False, inplace=True)
+            df["timestamp"] = df["timestamp"].dt.strftime("%a %d.%m.%Y %H:%M")
 
-        return dbc.Table.from_dataframe(df.head(8), striped=True, bordered=True, responsive = True)
+            return "Record inserted successfully!", dbc.Table.from_dataframe(df.head(8), striped=True, bordered=True, responsive = True)
 
-    return dash.no_update
+        else:
+            return "Wrong auth token!", dash.no_update
+
+    return dash.no_update, dash.no_update
 
 
 if __name__ == "__main__":
