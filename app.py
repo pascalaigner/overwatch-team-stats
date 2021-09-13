@@ -226,7 +226,7 @@ app.layout = dbc.Container(
                             type="number",
                             min=0,
                             max=100,
-                            value=29,
+                            value=30,
                         ),
                     ],
                     width="auto",
